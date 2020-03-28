@@ -3,9 +3,11 @@ import java.lang.Thread;
 float dt = 1e-4;
 float k = -1e+6;
 
-int n = 2000;
+int n = 100;
 
 Planet[] planets = new Planet[n];
+
+ArrayList<PlanetBall> balls = new ArrayList<PlanetBall>();
 
 float scaling = 1;
 PVector screenPos;
@@ -14,10 +16,33 @@ final float sensativity = 0.1;
 void setup()
 {
     screenPos = new PVector(0, 0);
-    size(1920, 1080);
+    //size(1920, 1080);
+    fullScreen();
 
     for (int i = 0; i < n; ++i)
         planets[i] = new Planet();
+    
+    for (Planet p1 : planets) {
+      if(balls.size() == 0)
+        balls.add(new PlanetBall().add(p1));
+      
+      boolean found = false;
+      for (PlanetBall ball : balls) {
+        for (Planet p2 : ball.planets) {
+          PVector d = PVector.sub(p1.pos, p2.pos);
+          float dist = d.mag();
+          float k = ((p1.r + p2.r) / 2 - dist) / 2;
+      
+          if(k >= 0) {
+            ball.add(p1);
+            found = true;
+            break;
+          }
+        }
+      }
+      if (!found)
+        balls.add(new PlanetBall().add(p1));
+    }
 
     thread("upd");
     textSize(25);
@@ -26,23 +51,57 @@ void setup()
 void draw()
 {
     background(110);
-    text(frameRate, 50, 50);
 
     translate(width/2, height/2); //to scale relative to the center of window
     scale(scaling);
 
-    translate(screenPos.x, screenPos.y);
+    translate(screenPos.x - width/2, screenPos.y - height/2);
+    
+    //long start = System.nanoTime();
 
-    for(Planet p : planets)
-        p.display();
+    //for(int i = 0; i < planets.length; ++i) {
+    //    Planet p1 = planets[i];
+    //    for (int j = i + 1; j < planets.length; ++j) {
+    //        Planet p2 = planets[j];
+
+    //        PVector gravity = gravity(p1, p2);
+    //        PVector collision = collision(p1, p2);
+
+    //        p1.df.add(gravity).add(collision.div(dt));
+    //        p2.df.sub(gravity).sub(collision);
+    //    }
+    //}
+
+    //for(Planet p : planets)
+    //    p.update();
+        
+    //dt = (System.nanoTime() - start) * 1e-12;
+
+    //for(Planet p : planets)
+    //    p.display();
+    
+    //for(Planet p : planets) {
+      
+      
+    //}
+    
+    for(PlanetBall b : balls)
+      b.display();
+    
+    translate(width/2-screenPos.x, height/2-screenPos.y);
+    scale(1/scaling);
+    translate(- width/2, - height/2);
+    
+    text(frameRate, 50, 50);
+    text(1/dt, 50, 100);
 }
 
 int t = 0;
 void upd() {
-    final int n = 2;
+    final int n = 4;
 
     while(true) {
-        //long start = System.nanoTime();
+        long start = System.nanoTime();
 
         Thread[] threads = new Thread[n];
 
@@ -61,7 +120,7 @@ void upd() {
                             PVector collision = collision(p1, p2);
 
                             p1.df.add(gravity).add(collision.div(dt));
-                            p2.df.sub(gravity).add(collision.div(dt));
+                            p2.df.sub(gravity).sub(collision);
                         }
                     }
                 }
@@ -73,10 +132,11 @@ void upd() {
             for(Thread t : threads)
                 t.join();
         } catch (InterruptedException e) { }
-        //dt = (System.nanoTime() - start) * 1e-12;
 
         for(Planet p : planets)
             p.update();
+        
+        dt = (System.nanoTime() - start) * 1e-12;
     }
 }
 
@@ -109,7 +169,7 @@ PVector collision(Planet p1, Planet p2) {
 
 void mouseWheel(MouseEvent event) {
     float delta = event.getCount();
-    scaling *= 1 + delta * sensativity;
+    scaling *= 1 - delta * sensativity;
 }
 
 void mouseDragged() {

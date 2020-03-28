@@ -9,7 +9,7 @@ abstract class Drawable {
     {
         pos = new PVector(-1,-1);
         r = 10;
-        c = color(255,120,0);
+        c = color(0,120,0);
     }
 
     void display()

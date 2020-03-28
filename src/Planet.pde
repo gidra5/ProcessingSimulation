@@ -17,7 +17,7 @@ class Planet extends Drawable
         df = new PVector(0, 0);
         dp = new PVector(0, 0);
 
-        m = random(50,200);
+        m = 2000 * 100 / n;//random(50,200);
 
         r = sqrt(m);
     }
