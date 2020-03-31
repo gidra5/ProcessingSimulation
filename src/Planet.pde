@@ -53,5 +53,11 @@ class Planet extends Drawable
             vel.y = -vel.y;
 
         acc = new PVector(0, 0);
+        
+        grid.putIfAbsent(new PVector(floor(pos.x/gridSize), floor(pos.y/gridSize)), new ArrayList<Planet>());
+        if (floor(pos.x/gridSize) != floor(prevPos.x/gridSize) || floor(pos.y/gridSize) != floor(prevPos.y/gridSize)) {
+          grid.get(new PVector(floor(prevPos.x/gridSize), floor(prevPos.y/gridSize))).remove(this);
+          grid.get(new PVector(floor(pos.x/gridSize), floor(pos.y/gridSize))).add(this);
+        }
     }
 }

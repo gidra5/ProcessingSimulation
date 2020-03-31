@@ -3,11 +3,14 @@ import java.lang.Thread;
 float dt = 1e-4;
 float k = -1e+6;
 
-int n = 100;
+int n = 1000;
 
 Planet[] planets = new Planet[n];
 
 ArrayList<PlanetBall> balls = new ArrayList<PlanetBall>();
+
+float gridSize = 1;
+HashMap<PVector, ArrayList<Planet>> grid = new HashMap<PVector, ArrayList<Planet>>();
 
 float scaling = 1;
 PVector screenPos;
@@ -19,32 +22,15 @@ void setup()
     //size(1920, 1080);
     fullScreen();
 
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < n; ++i) {
         planets[i] = new Planet();
-    
-    for (Planet p1 : planets) {
-      if(balls.size() == 0)
-        balls.add(new PlanetBall().add(p1));
-      
-      boolean found = false;
-      for (PlanetBall ball : balls) {
-        for (Planet p2 : ball.planets) {
-          PVector d = PVector.sub(p1.pos, p2.pos);
-          float dist = d.mag();
-          float k = ((p1.r + p2.r) / 2 - dist) / 2;
-      
-          if(k >= 0) {
-            ball.add(p1);
-            found = true;
-            break;
-          }
-        }
-      }
-      if (!found)
-        balls.add(new PlanetBall().add(p1));
+        gridSize = max(gridSize, planets[i].r);
     }
+    
+    for (Planet p1 : planets)
+        balls.add(new PlanetBall().add(p1));
 
-    thread("upd");
+    //thread("upd");
     textSize(25);
 }
 
@@ -80,13 +66,22 @@ void draw()
     //for(Planet p : planets)
     //    p.display();
     
-    //for(Planet p : planets) {
-      
-      
-    //}
+    for(int i = 0; i < balls.size(); ++i) {
+        PlanetBall b1 = balls.get(i);
+        for (int j = i + 1; j < balls.size(); ++j) {
+            PlanetBall b2 = balls.get(j);
+
+            PVector gravity = gravity(b1.ball, b2.ball);
+
+            b1.ball.df.add(gravity);
+            b2.ball.df.sub(gravity);
+        }
+    }
     
-    for(PlanetBall b : balls)
+    for(PlanetBall b : balls) {
+      b.update();
       b.display();
+    }
     
     translate(width/2-screenPos.x, height/2-screenPos.y);
     scale(1/scaling);
